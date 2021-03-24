@@ -1,10 +1,19 @@
 import { useState } from 'react';
+import { useHistory } from 'react-router-dom';
+import { v4 as uuid } from 'uuid';
 import jwt_decode from 'jwt-decode';
+
+
+import { Form } from '../components';
 
 function Login() {
   // create states for the controlled form components
   const [usernameValue, setUsernameValue] = useState('');
   const [passwordValue, setPasswordValue] = useState('');
+  const [errors, setErrors] = useState([]);
+
+  // get the location object from react-router-dom
+  const location = useHistory();
 
   // handle submission of the login form
   const loginSubmitHandler = e => {
@@ -23,35 +32,53 @@ function Login() {
       })
     })
       // parse the response
-      .then(res => res.json())
+      .then(res => {
+        if (res.status === 404) {
+          throw new Error('Username does not exist');
+        }
+        if (res.status === 500) {
+          throw new Error('An internal server error occured');
+        }
+        if (res.status === 401) {
+          throw new Error('Password is incorrect');
+        }
+        return res.json();
+      })
       .then(data => {
         // store everything from the JWT inside of localStorage
+        console.log('this shouldn\'t run!!');
         const { exp, iat, userId, username } = jwt_decode(data.token);
         localStorage.setItem('jwt_token', data.token);
         localStorage.setItem('jwt_exp', exp);
         localStorage.setItem('jwt_iat', iat);
         localStorage.setItem('jwt_userId', userId);
         localStorage.setItem('jwt_username', username);
+
+        location.push('/chat');
       })
       // handle a client-side error
       .catch(err => {
-        console.log(err);
+        setErrors(prevState => {
+          return [...prevState, err.message];
+        });
       });
   };
 
   return (
-    <form onSubmit={loginSubmitHandler}>
-      <h1>Log In</h1>
-      <div>
-        <label htmlFor="username">Username:</label>
-        <input id="username" value={usernameValue} onChange={({ target }) => setUsernameValue(target.value)} />
-      </div>
-      <div>
-        <label htmlFor="password">Password:</label>
-        <input id="password" value={passwordValue} onChange={({ target }) => setPasswordValue(target.value)} />
-      </div>
-      <button>Log In</button>
-    </form>
+    <Form onSubmit={loginSubmitHandler}>
+      <Form.Title>Log In</Form.Title>
+      {errors && errors.map(e => {
+        return <Form.Error key={uuid()}>{e}</Form.Error>;
+      })}
+      <Form.Input label="username" value={usernameValue} setValue={setUsernameValue} />
+      <Form.Input
+        label="password"
+        type="password"
+        value={passwordValue}
+        setValue={setPasswordValue}
+      />
+      <Form.Submit>Log In</Form.Submit>
+    </Form>
   );
 }
 

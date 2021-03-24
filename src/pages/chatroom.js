@@ -16,19 +16,28 @@ function Chatroom() {
         'Authorization': localStorage.getItem('jwt_token')
       }
     })
-      .then(res => res.json())
-      .then(data => setMessages(data.data))
+      .then(res => {
+        return res.json();
+      })
+      .then(data => {
+
+        setMessages(data.data);
+      })
       .catch(err => {
         console.log(err);
       });
 
-
+    // open a socket
     const socket = openSocket('http://localhost:8080');
+
+    // listen for requests on the messages channel
     socket.on('messages', (data) => {
+      // handle a new message
       if (data.action === 'post') {
         setMessages(prevState => {
           return [data.message, ...prevState];
         });
+        // handle deleting a message
       } else if (data.action === 'delete') {
         setMessages(prevState => {
           const newMessages = prevState.filter(m => m._id !== data.messageId);
