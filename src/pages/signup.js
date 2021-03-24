@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import jwt_decode from 'jwt-decode';
 
 function Signup() {
   // create states for the controlled form components

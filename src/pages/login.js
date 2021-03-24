@@ -8,7 +8,7 @@ function Login() {
 
   // handle submission of the login form
   const loginSubmitHandler = e => {
-    // prevent the page from refreshing
+    // prevent the default action
     e.preventDefault();
 
     // send a post request with a JSON payload containing the creditentials you're trying to use
