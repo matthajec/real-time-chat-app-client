@@ -1,85 +1,109 @@
-import { useState } from 'react';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
 import { useHistory } from 'react-router-dom';
-import { v4 as uuid } from 'uuid';
+import { Form, Container } from '../components';
 import jwt_decode from 'jwt-decode';
 
-
-import { Form } from '../components';
-
-function Login() {
-  // create states for the controlled form components
-  const [usernameValue, setUsernameValue] = useState('');
-  const [passwordValue, setPasswordValue] = useState('');
-  const [errors, setErrors] = useState([]);
-
-  // get the location object from react-router-dom
+function Signup() {
+  // get location object
   const location = useHistory();
 
-  // handle submission of the login form
-  const loginSubmitHandler = e => {
-    // prevent the default action
-    e.preventDefault();
+  // create formik object
+  const formik = useFormik({
+    // set inital values
+    initialValues: {
+      username: '',
+      password: '',
+    },
+    // create a validation schema with Yup
+    validationSchema: Yup.object({
+      username: Yup.string()
+        .matches(/^[a-zA-Z0-9]+$/, 'Invalid Username')
+        .min(3, 'Invalid Username')
+        .max(22, 'Invalid Username')
+        .required('Required'),
+      password: Yup.string()
+        .min(7, 'Invalid Password')
+        .matches(/[^a-zA-Z]/g, 'Invalid Password')
+        .required('Required'),
+    }),
+    // handle form submission
+    onSubmit: values => {
+      // initialize status in higher scope
+      let status = null;
 
-    // send a post request with a JSON payload containing the creditentials you're trying to use
-    fetch('http://localhost:8080/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        username: usernameValue,
-        password: passwordValue
+      // post the username and password to the server to check it
+      fetch('http://localhost:8080/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          username: values.username,
+          password: values.password
+        })
       })
-    })
-      // parse the response
-      .then(res => {
-        if (res.status === 404) {
-          throw new Error('Username does not exist');
-        }
-        if (res.status === 500) {
-          throw new Error('An internal server error occured');
-        }
-        if (res.status === 401) {
-          throw new Error('Password is incorrect');
-        }
-        return res.json();
-      })
-      .then(data => {
-        // store everything from the JWT inside of localStorage
-        console.log('this shouldn\'t run!!');
-        const { exp, iat, userId, username } = jwt_decode(data.token);
-        localStorage.setItem('jwt_token', data.token);
-        localStorage.setItem('jwt_exp', exp);
-        localStorage.setItem('jwt_iat', iat);
-        localStorage.setItem('jwt_userId', userId);
-        localStorage.setItem('jwt_username', username);
+        .then(res => {
+          // set the status
+          status = res.status;
+          return res.json();
+        })
+        .then(data => {
+          // handle success
+          if (status === 200) {
+            localStorage.setItem('jwt_token', data.token);
+            console.log('nice one');
+            location.push('/chat');
+          } else if (status === 422) { // handle a validation error
+            let newErrors = {};
 
-        location.push('/chat');
-      })
-      // handle a client-side error
-      .catch(err => {
-        setErrors(prevState => {
-          return [...prevState, err.message];
+            // for each error create a key/value pair with the paramerter and the message
+            data.data.forEach(error => {
+              newErrors[error.param] = error.msg;
+            });
+
+            // set the formik errors to the errors from the server
+            formik.setErrors(newErrors);
+          }
         });
-      });
-  };
+    }
+  });
 
   return (
-    <Form onSubmit={loginSubmitHandler}>
-      <Form.Title>Log In</Form.Title>
-      {errors && errors.map(e => {
-        return <Form.Error key={uuid()}>{e}</Form.Error>;
-      })}
-      <Form.Input label="username" value={usernameValue} setValue={setUsernameValue} />
-      <Form.Input
-        label="password"
-        type="password"
-        value={passwordValue}
-        setValue={setPasswordValue}
-      />
-      <Form.Submit>Log In</Form.Submit>
-    </Form>
+    <Container>
+      <Form onSubmit={formik.handleSubmit}>
+        <Form.Title>
+          Log In
+        </Form.Title>
+
+
+        <Form.Input
+          label="username"
+          id="username"
+          type="text"
+          error={formik.touched.username && formik.errors.username ? true : false}
+          {...formik.getFieldProps('username')}
+        />
+        {formik.touched.username && formik.errors.username ? (
+          <Form.Error>{formik.errors.username}</Form.Error>
+        ) : null}
+
+        <Form.Input
+          label="password"
+          id="password"
+          type="password"
+          error={formik.touched.password && formik.errors.password ? true : false}
+          {...formik.getFieldProps('password')}
+        />
+        {formik.touched.password && formik.errors.password ? (
+          <Form.Error>{formik.errors.password}</Form.Error>
+        ) : null}
+
+        <Form.Submit>Log In</Form.Submit>
+      </Form>
+    </Container>
   );
+
 }
 
-export default Login;
+export default Signup;

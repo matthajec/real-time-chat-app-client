@@ -7,7 +7,7 @@ export const Container = styled.form`
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: auto;
+  border-radius: 25px;
 
   & * {
     margin-bottom: 20px;
@@ -31,6 +31,8 @@ export const InputLabel = styled.label`
   color: ${props => props.theme.colors.grey};
   transition: top .2s ease;
   font-size: ${props => props.theme.font.size.sm_md};
+
+  top: ${props => props.value !== '' ? '15px' : '50%'};
 `;
 
 export const InputBox = styled.input`
@@ -38,14 +40,12 @@ export const InputBox = styled.input`
   width: 100%;
   top: 32%;
   height: 60%;
-  background-color: blue;
   padding: 0 20px;
   background-color: transparent;
   border: none;
   outline: none;
   font-size: ${props => props.theme.font.size.md};
 
-  &:valid ~ ${InputLabel},
   &:focus ~ ${InputLabel} {
    top: 15px;
   }
@@ -53,25 +53,38 @@ export const InputBox = styled.input`
 
 export const InputWrapper = styled.div`
   border-radius: 10px;
-  border: 1px solid ${props => props.theme.colors.dark};
+  border: ${props => !props.error ? `1px solid black` : `2px solid ${props.theme.colors.error}`};
   background-color: ${props => props.theme.colors.white};
   height: 55px;
   width: 100%;
   position: relative;
+
 `;
 
 export const Submit = styled.button`
   height: 55px;
   width: 100%;
+  margin-top: 10px;
+
+  border-radius: 10px;
+  border: none;
+  background-color: ${props => props.theme.colors.white};
+  outline: none;
+  border-bottom: 4px solid ${props => props.theme.colors.lightgrey};
+  cursor: pointer;
+
+  &:active {
+    border-bottom: 2px solid ${props => props.theme.colors.lightgrey};;
+    margin-top: 12px;
+    height: 53px;
+  }
 `;
 
 export const ErrorMessage = styled.p`
-  padding: 10px;
   border-radius: 10px;
   width: 100%;
-  margin-bottom: 10px;
-  font-size: ${props => props.theme.font.size.sm_md};
-  border: 1px solid #B32A15;
-  background-color: #DBB3AD;
-  color: #B32A15;
+  margin-top: -17px;
+  font-size: ${props => props.theme.font.size.md};
+  font-weight: 700;
+  color: ${props => props.theme.colors.error};
 `;

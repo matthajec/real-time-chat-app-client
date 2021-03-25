@@ -1,9 +1,11 @@
 const theme = {
   colors: {
-    dark: '#171A21',
+    dark: '#08A4BD',
     grey: '#474747',
-    light: '#468189',
-    white: '#F0F7F4'
+    lightgrey: '#bfbfbf',
+    light: '#01172F',
+    white: '#F0F7F4',
+    error: '#c20023'
   },
   font: {
     size: {

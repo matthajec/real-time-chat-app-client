@@ -22,11 +22,11 @@ Form.Title = function FormTitle({ children, ...restProps }) {
   );
 };
 
-Form.Input = function FormInput({ value, setValue, label, ...restProps }) {
+Form.Input = function FormInput({ error, label, value, ...restProps }) {
   return (
-    <InputWrapper {...restProps}>
-      <InputBox required value={value} onChange={({ target }) => setValue(target.value)} {...restProps} />
-      <InputLabel>{label}</InputLabel>
+    <InputWrapper error={error}>
+      <InputBox {...restProps} />
+      <InputLabel value={value}>{label}</InputLabel>
     </InputWrapper>
   );
 };

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import openSocket from 'socket.io-client';
+import io from 'socket.io-client';
 
 function Chatroom() {
   // create state for controlled input
@@ -20,7 +20,6 @@ function Chatroom() {
         return res.json();
       })
       .then(data => {
-
         setMessages(data.data);
       })
       .catch(err => {
@@ -28,7 +27,7 @@ function Chatroom() {
       });
 
     // open a socket
-    const socket = openSocket('http://localhost:8080');
+    const socket = io.connect('http://localhost:8080');
 
     // listen for requests on the messages channel
     socket.on('messages', (data) => {
