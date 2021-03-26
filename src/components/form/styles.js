@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { Link } from 'react-router-dom';
 
 export const Container = styled.form`
   background-color: ${props => props.theme.colors.light};
@@ -72,6 +73,8 @@ export const Submit = styled.button`
   outline: none;
   border-bottom: 4px solid ${props => props.theme.colors.lightgrey};
   cursor: pointer;
+  font-size: ${props => props.theme.font.size.default};
+  color: ${props => props.theme.colors.light};
 
   &:active {
     border-bottom: 2px solid ${props => props.theme.colors.lightgrey};;
@@ -87,4 +90,10 @@ export const ErrorMessage = styled.p`
   font-size: ${props => props.theme.font.size.md};
   font-weight: 700;
   color: ${props => props.theme.colors.error};
+`;
+
+export const Text = styled.p``;
+
+export const TextLink = styled(Link)`
+  color: darkorange;
 `;

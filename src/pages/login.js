@@ -51,8 +51,12 @@ function Signup() {
         .then(data => {
           // handle success
           if (status === 200) {
+            const decodedJwt = jwt_decode(data.token);
+
+            localStorage.setItem('jwt_username', decodedJwt.username);
+            localStorage.setItem('jwt_userId', decodedJwt.userId);
+            localStorage.setItem('jwt_expiration', decodedJwt.exp);
             localStorage.setItem('jwt_token', data.token);
-            console.log('nice one');
             location.push('/chat');
           } else if (status === 422) { // handle a validation error
             let newErrors = {};
@@ -65,6 +69,9 @@ function Signup() {
             // set the formik errors to the errors from the server
             formik.setErrors(newErrors);
           }
+        })
+        .catch(err => {
+          formik.setStatus(err.message || 'An unknown error occured.');
         });
     }
   });
@@ -76,6 +83,7 @@ function Signup() {
           Log In
         </Form.Title>
 
+        {formik.status && <Form.Error>{formik.status}</Form.Error>}
 
         <Form.Input
           label="username"
@@ -100,6 +108,7 @@ function Signup() {
         ) : null}
 
         <Form.Submit>Log In</Form.Submit>
+        <Form.Text>Don't have an account? <Form.TextLink to="/signup">Sign up</Form.TextLink> instead.</Form.Text>
       </Form>
     </Container>
   );

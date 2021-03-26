@@ -5,7 +5,9 @@ import {
   InputLabel,
   InputBox,
   Submit,
-  ErrorMessage
+  ErrorMessage,
+  Text,
+  TextLink
 } from './styles';
 
 function Form({ children, ...restProps }) {
@@ -40,6 +42,18 @@ Form.Submit = function FormSubmit({ children, ...restProps }) {
 Form.Error = function FormError({ children, ...restProps }) {
   return (
     <ErrorMessage {...restProps}>{children}</ErrorMessage>
+  );
+};
+
+Form.Text = function FormText({ children, ...restProps }) {
+  return (
+    <Text {...restProps}>{children}</Text>
+  );
+};
+
+Form.TextLink = function FormTextLink({ to, children, ...restProps }) {
+  return (
+    <TextLink to={to} {...restProps}>{children}</TextLink>
   );
 };
 

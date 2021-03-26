@@ -4,14 +4,18 @@ import { useHistory } from 'react-router-dom';
 import { Form, Container } from '../components';
 
 function Signup() {
+  // get location object
   const location = useHistory();
 
+  // create formik object
   const formik = useFormik({
+    // set inital values
     initialValues: {
       username: '',
       password: '',
       verifyPassword: ''
     },
+    // create a validation schema with Yup
     validationSchema: Yup.object({
       username: Yup.string()
         .matches(/^[a-zA-Z0-9]+$/, 'Must only contain letters and numbers')
@@ -26,9 +30,12 @@ function Signup() {
         .oneOf([Yup.ref('password'), null], 'Passwords must match')
         .required('Required')
     }),
+    // handle form submission
     onSubmit: values => {
+      // initialize status in higher scope
       let status = null;
 
+      // post the username and password to the server to check it
       fetch('http://localhost:8080/auth/signup', {
         method: 'POST',
         headers: {
@@ -40,22 +47,30 @@ function Signup() {
         })
       })
         .then(res => {
+          // set the status
           status = res.status;
           return res.json();
         })
         .then(data => {
+          // handle success
+
           if (status === 201) {
             location.push('/login');
-          } else if (status === 422) {
+          } else if (status === 422) {// handle a validation error
             let newErrors = {};
 
+            // for each error create a key/value pair with the paramerter and the message
             data.data.forEach(error => {
               newErrors[error.param] = error.msg;
             });
 
+            // set the formik errors to the errors from the server
             formik.setErrors(newErrors);
           }
           console.log(data);
+        })
+        .catch(err => {
+          formik.setStatus(err.message || 'An unknown error occured.');
         });
     }
   });
@@ -67,6 +82,7 @@ function Signup() {
           Sign Up
         </Form.Title>
 
+        {formik.status && <Form.Error>{formik.status}</Form.Error>}
 
         <Form.Input
           label="username"
@@ -102,6 +118,7 @@ function Signup() {
         ) : null}
 
         <Form.Submit>Sign Up</Form.Submit>
+        <Form.Text>Already registered? <Form.TextLink to="/login">Log in</Form.TextLink> instead.</Form.Text>
       </Form>
     </Container>
   );

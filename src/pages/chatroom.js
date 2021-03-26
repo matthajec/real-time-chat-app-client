@@ -20,7 +20,7 @@ function Chatroom() {
         return res.json();
       })
       .then(data => {
-        setMessages(data.data);
+        setMessages(data.data.reverse());
       })
       .catch(err => {
         console.log(err);
@@ -29,12 +29,18 @@ function Chatroom() {
     // open a socket
     const socket = io.connect('http://localhost:8080');
 
+    socket.emit('authorization', localStorage.getItem('jwt_token'));
+
+    socket.on('authorization', res => {
+      console.log(res);
+    });
+
     // listen for requests on the messages channel
     socket.on('messages', (data) => {
       // handle a new message
       if (data.action === 'post') {
         setMessages(prevState => {
-          return [data.message, ...prevState];
+          return [...prevState, data.message];
         });
         // handle deleting a message
       } else if (data.action === 'delete') {
