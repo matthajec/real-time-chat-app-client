@@ -2,9 +2,18 @@ import {
   Container
 } from './styles';
 
-function _Container({ children, ...restProps }) {
+function _Container({ p = "0px", fd = "row", ai = "center", jc = "center", mh = "100vh", children, ...restProps }) {
   return (
-    <Container {...restProps}>{children}</Container>
+    <Container
+      p={p}
+      fd={fd}
+      ai={ai}
+      jc={jc}
+      mh={mh}
+      {...restProps}
+    >
+      {children}
+    </Container>
   );
 }
 

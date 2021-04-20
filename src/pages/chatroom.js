@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import io from 'socket.io-client';
+import { Container, ChatInput, ChatMessage } from '../components';
 
 function Chatroom() {
+  // get location object
+  const location = useHistory();
+
   // create state for controlled input
   const [messageValue, setMessageValue] = useState('');
 
@@ -9,6 +14,46 @@ function Chatroom() {
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
+    if (
+      !localStorage.getItem('jwt_token') ||
+      Date.now() / 1000 - parseInt(localStorage.getItem('jwt_expiration')) >= 0
+    ) {
+      return location.push('/login');
+    }
+
+    // open a socket
+    const socket = io.connect('http://localhost:8080', {
+      secure: true
+    });
+
+    // send the token over the socket
+    socket.emit('authorization', localStorage.getItem('jwt_token'));
+
+    // listen for the authorization response
+    socket.on('authorization', res => {
+      if (res.status !== 'joined') {
+        location.push('/login');
+      }
+    });
+
+    // listen for requests on the messages channel
+    socket.on('messages', (data) => {
+      // handle a new message
+      if (data.action === 'post') {
+        console.log('posting new message');
+        setMessages(prevState => {
+          return [...prevState, data.message];
+        });
+        // handle deleting a message
+      } else if (data.action === 'delete') {
+        setMessages(prevState => {
+          const newMessages = prevState.filter(m => m._id !== data.messageId);
+          return newMessages;
+        });
+      }
+
+    });
+
     // fetch the last 100 messages before you arrived
     fetch('http://localhost:8080/messages', {
       method: 'GET',
@@ -25,32 +70,6 @@ function Chatroom() {
       .catch(err => {
         console.log(err);
       });
-
-    // open a socket
-    const socket = io.connect('http://localhost:8080');
-
-    socket.emit('authorization', localStorage.getItem('jwt_token'));
-
-    socket.on('authorization', res => {
-      console.log(res);
-    });
-
-    // listen for requests on the messages channel
-    socket.on('messages', (data) => {
-      // handle a new message
-      if (data.action === 'post') {
-        setMessages(prevState => {
-          return [...prevState, data.message];
-        });
-        // handle deleting a message
-      } else if (data.action === 'delete') {
-        setMessages(prevState => {
-          const newMessages = prevState.filter(m => m._id !== data.messageId);
-          return newMessages;
-        });
-      }
-
-    });
   }, []);
 
   const messageSubmitHandler = e => {
@@ -85,30 +104,26 @@ function Chatroom() {
 
   const messageComponents = messages.map(m => {
     return (
-      <div key={m._id}>
-        <p>{m.creator.username}:</p>
-        <p>{m.message}</p>
-        <button onClick={() => messageDeleteHandler(m._id)}>Delete</button>
-        <br />
-        <br />
-        <br />
-
-      </div>
+      <ChatMessage key={m._id}>
+        <ChatMessage.Author>{m.creator.username}:</ChatMessage.Author>
+        <ChatMessage.Message>{m.message}</ChatMessage.Message>
+        <ChatMessage.Delete onClick={() => messageDeleteHandler(m._id)}> Delete </ChatMessage.Delete>
+      </ChatMessage>
     );
   });
 
   return (
-    <div className="App">
-      <h1>Welcome, {localStorage.getItem('jwt_username')}</h1>
-      <hr />
-      {messageComponents}
-      <hr />
-      <form onSubmit={messageSubmitHandler}>
-        <label>Message: </label>
-        <input value={messageValue} onChange={({ target }) => setMessageValue(target.value)} />
-        <button>Submit</button>
-      </form>
-    </div>
+    <Container fd="column" ai="left" jc="space-between">
+      <Container fd="column" ai="left" jc="flex-start" mh="0">
+        <h1>Welcome, {localStorage.getItem('jwt_username')}</h1>
+        {messageComponents}
+      </Container>
+
+      <ChatInput onSubmit={messageSubmitHandler}>
+        <ChatInput.Input value={messageValue} onChange={({ target }) => setMessageValue(target.value)} />
+        <ChatInput.Submit>Send</ChatInput.Submit>
+      </ChatInput>
+    </Container>
   );
 }
 
